@@ -27,7 +27,7 @@ function predict(rvm::RVM, X)
     if rvm.is_regression
         transpose(rvm.μ) * X
     else
-        σ(transpose(rvm.μ) * X)
+        σ.(transpose(rvm.μ) * X)
     end
 end
 
@@ -48,8 +48,8 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
     end
     M = get_M(Φ)
     α = fill(Inf, M)
-    μ = randn(M,)
-    Σ = randn(M, M)
+    μ = zeros(M,)
+    Σ = zeros(M, M)
     B = compute_B(B, Φ, μ, is_regression)
     t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
     mask = BitArray(fill(false, M))
@@ -92,7 +92,7 @@ function compute_B(B::Matrix{Float64}, Φ::Matrix{Float64}, μ::Vector{Float64},
     if is_regression
         return B
     else
-        return diagm(σ(Φ * μ))
+        return diagm(σ.(Φ * μ))
     end
 end
 
