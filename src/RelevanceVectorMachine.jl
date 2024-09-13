@@ -1,5 +1,7 @@
 module RelevanceVectorMachine
 
+export rvm, predict, posterior
+
 using StatsModels
 using Tables
 using LinearAlgebra
@@ -25,16 +27,16 @@ end
 
 function predict(rvm::RVM, X)
     if rvm.is_regression
-        transpose(rvm.μ) * X
+        X * rvm.μ
     else
-        σ.(transpose(rvm.μ) * X)
+        σ.(X * rvm.μ)
     end
 end
 
 posterior(rvm::RVM) = Normal(rvm.μ, rvm.Σ)
 
-get_Φ(formula, data) = modelmatrix(formula.rhs, data)
-get_t(formula, data) = vec(modelmatrix(formula.lhs, data))
+get_Φ(formula, data) = float.(modelmatrix(formula.rhs, data))
+get_t(formula, data) = float.(vec(modelmatrix(formula.lhs, data)))
 get_N(Φ) = size(Φ, 1)
 get_M(Φ) = size(Φ, 2)
 σ(y) = 1 / (1 + exp(-y))
