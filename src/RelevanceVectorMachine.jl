@@ -33,7 +33,7 @@ function predict(rvm::RVM, X)
     end
 end
 
-posterior(rvm::RVM) = Normal(rvm.μ, rvm.Σ)
+posterior(rvm::RVM) = MvNormal(rvm.μ, Hermitian(rvm.Σ))
 
 get_Φ(formula, data) = float.(modelmatrix(formula.rhs, data))
 get_t(formula, data) = float.(vec(modelmatrix(formula.lhs, data)))
