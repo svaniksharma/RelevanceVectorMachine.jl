@@ -16,6 +16,14 @@ struct RVM
     is_regression::Bool
 end
 
+"""
+    rvm(formula::FormulaTerm, data, mode = "regression")
+
+Initialize and train a relevance vector machine, using the variables specified in
+`formula` with the data provided in `data`. `mode` can either be "regression" or 
+"classification".
+
+"""
 function rvm(formula::FormulaTerm, data, mode = "regression")
     Φ = get_Φ(formula, data)
     t = get_t(formula, data)
@@ -25,6 +33,12 @@ function rvm(formula::FormulaTerm, data, mode = "regression")
     sparse_seq_bayes(Φ, t, mode == "regression")
 end
 
+"""
+   predict(rvm::RVM, X)
+
+Given a matrix `X` and relevance vector machine `rvm`, compute predictions for `X`.
+
+"""
 function predict(rvm::RVM, X)
     if rvm.is_regression
         X * rvm.μ
@@ -33,6 +47,12 @@ function predict(rvm::RVM, X)
     end
 end
 
+"""
+    posterior(rvm::RVM)
+
+Returns a normal distribution with mean μ and covariance Σ corresponding to 
+the parameters of the relevance vector machine.
+"""
 posterior(rvm::RVM) = MvNormal(rvm.μ, Hermitian(rvm.Σ))
 
 get_Φ(formula, data) = float.(modelmatrix(formula.rhs, data))
