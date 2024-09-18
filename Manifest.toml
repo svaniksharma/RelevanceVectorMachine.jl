@@ -2,7 +2,13 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "3bb630186b8168e5bb1ba31877118628aafe8869"
+project_hash = "c2f804bf6945bb838bcc190a063032f25ca2e07b"
+
+[[deps.AliasTables]]
+deps = ["PtrArrays", "Random"]
+git-tree-sha1 = "9876e1e164b144ca45e9e3198d0b689cadfed9ff"
+uuid = "66dad0bd-aa9a-41b7-9441-69ab47430ed8"
+version = "1.1.3"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -117,6 +123,22 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
+[[deps.Distributions]]
+deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
+git-tree-sha1 = "e6c693a0e4394f8fda0e51a5bdf5aef26f8235e9"
+uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
+version = "0.25.111"
+
+    [deps.Distributions.extensions]
+    DistributionsChainRulesCoreExt = "ChainRulesCore"
+    DistributionsDensityInterfaceExt = "DensityInterface"
+    DistributionsTestExt = "Test"
+
+    [deps.Distributions.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
+    Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
 git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
@@ -168,6 +190,18 @@ weakdeps = ["Mmap", "Test"]
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
+
+[[deps.FillArrays]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "6a70198746448456524cb442b8af316927ff3e1a"
+uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
+version = "1.13.0"
+weakdeps = ["PDMats", "SparseArrays", "Statistics"]
+
+    [deps.FillArrays.extensions]
+    FillArraysPDMatsExt = "PDMats"
+    FillArraysSparseArraysExt = "SparseArrays"
+    FillArraysStatisticsExt = "Statistics"
 
 [[deps.Future]]
 deps = ["Random"]
@@ -395,6 +429,12 @@ git-tree-sha1 = "dfdf5519f235516220579f949664f1bf44e741c5"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.6.3"
 
+[[deps.PDMats]]
+deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
+git-tree-sha1 = "949347156c25054de2db3b166c52ac4728cbad65"
+uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
+version = "0.11.31"
+
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
@@ -454,6 +494,23 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 [[deps.Profile]]
 deps = ["Printf"]
 uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+
+[[deps.PtrArrays]]
+git-tree-sha1 = "77a42d78b6a92df47ab37e177b2deac405e1c88f"
+uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
+version = "1.2.1"
+
+[[deps.QuadGK]]
+deps = ["DataStructures", "LinearAlgebra"]
+git-tree-sha1 = "cda3b045cf9ef07a08ad46731f5a3165e56cf3da"
+uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+version = "2.11.1"
+
+    [deps.QuadGK.extensions]
+    QuadGKEnzymeExt = "Enzyme"
+
+    [deps.QuadGK.weakdeps]
+    Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 
 [[deps.RData]]
 deps = ["CategoricalArrays", "CodecZlib", "DataFrames", "Dates", "FileIO", "Requires", "TimeZones", "Unicode"]
@@ -607,6 +664,10 @@ deps = ["PrecompileTools"]
 git-tree-sha1 = "a04cabe79c5f01f4d723cc6704070ada0b9d46d5"
 uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
 version = "0.3.4"
+
+[[deps.SuiteSparse]]
+deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
+uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
