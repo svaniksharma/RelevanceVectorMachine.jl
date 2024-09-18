@@ -1,6 +1,6 @@
 module RelevanceVectorMachine
 
-export rvm, predict, posterior
+export rvm, predict, posterior, RVM
 
 using StatsModels
 using Tables
@@ -8,6 +8,11 @@ using LinearAlgebra
 using Statistics
 using Distributions
 
+"""
+    RVM
+
+An instance of a relevance vector machine. 
+"""
 struct RVM
     μ::Vector{Float64}
     Σ::Matrix{Float64}
