@@ -11,7 +11,7 @@ using Distributions
 """
     RVM
 
-An instance of a relevance vector machine. 
+An instance of a relevance vector machine. Can be instantiated using `rvm`.
 """
 struct RVM
     μ::Vector{Float64}
@@ -39,7 +39,7 @@ function rvm(formula::FormulaTerm, data, mode = "regression")
 end
 
 """
-   predict(rvm::RVM, X)
+    predict(rvm::RVM, X)
 
 Given a matrix `X` and relevance vector machine `rvm`, compute predictions for `X`.
 
