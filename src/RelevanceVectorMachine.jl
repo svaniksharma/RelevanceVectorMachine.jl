@@ -77,10 +77,10 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
     α = fill(Inf, M)
     μ = zeros(M,)
     Σ = zeros(M, M)
-    B = compute_B(B, Φ, μ, is_regression)
-    t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
     mask = BitArray(fill(false, M))
     mask[1] = true
+    B = compute_B(B, Φ, μ, is_regression)
+    t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
     S = compute_S(Φ, B, Σ, mask)
     Q = compute_Q(Φ, B, Σ, t_hat, mask)
     q = compute_q(Q, S, α)
@@ -131,25 +131,24 @@ function compute_t_hat(B::Matrix{Float64}, Φ::Matrix{Float64}, μ::Vector{Float
     end
 end
 
+function compute_QS(Φ_vw::Matrix{Float64}, Σ_vw::Matrix{Float64}, B::Matrix{Float64}, ϕ::Vector{Float64}, r::Vector{Float64})
+    # ϕ'Bϕ - ϕ'BΦΣΦ'Bϕ or ϕ'Bt̂ - ϕ'BΦΣΦ'Bt̂
+    transpose(ϕ) * B * r - transpose(ϕ) * B * Φ_vw * Σ_vw * transpose(Φ_vw) * B * r
+end
+
 function compute_S(Φ::Matrix{Float64}, B::Matrix{Float64}, Σ::Matrix{Float64}, mask::BitVector)
-    M = get_M(Φ)
-    S = zeros(M,)
     Φ_vw = Φ[:, mask]
     Σ_vw = Σ[mask, mask]
-    for i ∈ 1:M
-        S[i] = transpose(Φ[:, i]) * B * Φ[:, i] - transpose(Φ[:, i]) * B * Φ_vw * Σ_vw * transpose(Φ_vw) * B * Φ[:, i]
-    end
+    compute_sparsity(ϕ) = compute_QS(Φ_vw, Σ_vw, B, ϕ, ϕ)
+    S = vec(mapslices(compute_sparsity, Φ, dims = 1))
     S
 end
 
 function compute_Q(Φ::Matrix{Float64}, B::Matrix{Float64}, Σ::Matrix{Float64}, t_hat::Vector{Float64}, mask::BitVector)
-    M = get_M(Φ)
-    Q = zeros(M,)
     Φ_vw = Φ[:, mask]
     Σ_vw = Σ[mask, mask]
-    for i ∈ 1:M
-        Q[i] = transpose(Φ[:, i]) * B * t_hat - transpose(Φ[:, i]) * B * Φ_vw * Σ_vw * transpose(Φ_vw) * B * t_hat
-    end
+    compute_quality(ϕ) = compute_QS(Φ_vw, Σ_vw, B, ϕ, t_hat)
+    Q = vec(mapslices(compute_quality, Φ, dims = 1))
     Q
 end
 
