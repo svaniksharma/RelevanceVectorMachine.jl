@@ -607,7 +607,7 @@ uuid = "2792f1a3-b283-48e8-9a74-f99dce5104f3"
 version = "0.1.0"
 
 [[deps.RelevanceVectorMachine]]
-deps = ["BenchmarkTools", "DataFrames", "Distributions", "LinearAlgebra", "Pluto", "RDatasets", "Statistics", "StatsModels", "Tables"]
+deps = ["BenchmarkTools", "DataFrames", "Distributions", "LinearAlgebra", "Pluto", "RDatasets", "Statistics", "StatsModels", "Tables", "Test"]
 path = "/home/svanik/devbox/RelevanceVectorMachine"
 uuid = "9fd38b11-e9ac-4299-9d3c-c25c1a5084b5"
 version = "0.1.0"
