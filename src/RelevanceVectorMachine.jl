@@ -11,7 +11,7 @@ using Distributions
 """
     RVM
 
-An instance of a relevance vector machine. 
+An instance of a relevance vector machine. Can be instantiated using `rvm`.
 """
 struct RVM
     μ::Vector{Float64}
@@ -22,24 +22,24 @@ struct RVM
 end
 
 """
-    rvm(formula::FormulaTerm, data, mode = "regression")
+    rvm(formula::FormulaTerm, data, mode = "regression", max_iters = 1000)
 
 Initialize and train a relevance vector machine, using the variables specified in
 `formula` with the data provided in `data`. `mode` can either be "regression" or 
 "classification".
 
 """
-function rvm(formula::FormulaTerm, data, mode = "regression")
+function rvm(formula::FormulaTerm, data, mode = "regression", max_iters = 100)
     Φ = get_Φ(formula, data)
     t = get_t(formula, data)
     if mode != "regression" && mode != "classification"
         error("Specify mode as regression or classification")
     end
-    sparse_seq_bayes(Φ, t, mode == "regression")
+    sparse_seq_bayes(Φ, t, mode == "regression", max_iters)
 end
 
 """
-   predict(rvm::RVM, X)
+    predict(rvm::RVM, X)
 
 Given a matrix `X` and relevance vector machine `rvm`, compute predictions for `X`.
 
@@ -56,7 +56,7 @@ end
     posterior(rvm::RVM)
 
 Returns a normal distribution with mean μ and covariance Σ corresponding to 
-the parameters of the relevance vector machine.
+the distribution of the weight parameter (a vector) of the relevance vector machine.
 """
 posterior(rvm::RVM) = MvNormal(rvm.μ, Hermitian(rvm.Σ))
 
@@ -66,7 +66,7 @@ get_N(Φ) = size(Φ, 1)
 get_M(Φ) = size(Φ, 2)
 σ(y) = 1 / (1 + exp(-y))
 
-function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression::Bool)
+function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression::Bool, max_iters)
     N = get_N(Φ)
     B = randn(N, N)
     if is_regression
@@ -77,10 +77,10 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
     α = fill(Inf, M)
     μ = zeros(M,)
     Σ = zeros(M, M)
-    B = compute_B(B, Φ, μ, is_regression)
-    t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
     mask = BitArray(fill(false, M))
     mask[1] = true
+    B = compute_B(B, Φ, μ, is_regression)
+    t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
     S = compute_S(Φ, B, Σ, mask)
     Q = compute_Q(Φ, B, Σ, t_hat, mask)
     q = compute_q(Q, S, α)
@@ -88,7 +88,8 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
     α[1] = update_α(1, q, s)
     Σ[mask, mask] = compute_Σ(Φ, B, α, mask)
     μ[mask] = compute_μ(Φ, B, Σ, t_hat, mask)
-    while !converged(α, q, s)
+    niters = 0
+    while !converged(α, q, s) && niters < max_iters
         for i ∈ 1:M
             if q[i]^2 > s[i] && α[i] < Inf
                 α[i] = update_α(i, q, s)
@@ -111,6 +112,10 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
         s = compute_s(S, α)
         Σ[mask, mask] = compute_Σ(Φ, B, α, mask)
         μ[mask] = compute_μ(Φ, B, Σ, t_hat, mask)
+        niters += 1
+    end
+    if niters ≥ max_iters
+        println("[WARNING] RVM may have not converged")
     end
     RVM(μ, Σ, α, B, is_regression)
 end
@@ -131,25 +136,24 @@ function compute_t_hat(B::Matrix{Float64}, Φ::Matrix{Float64}, μ::Vector{Float
     end
 end
 
+function compute_QS(Φ_vw::Matrix{Float64}, Σ_vw::Matrix{Float64}, B::Matrix{Float64}, ϕ::Vector{Float64}, r::Vector{Float64})
+    # ϕ'Bϕ - ϕ'BΦΣΦ'Bϕ or ϕ'Bt̂ - ϕ'BΦΣΦ'Bt̂
+    transpose(ϕ) * B * r - transpose(ϕ) * B * Φ_vw * Σ_vw * transpose(Φ_vw) * B * r
+end
+
 function compute_S(Φ::Matrix{Float64}, B::Matrix{Float64}, Σ::Matrix{Float64}, mask::BitVector)
-    M = get_M(Φ)
-    S = zeros(M,)
     Φ_vw = Φ[:, mask]
     Σ_vw = Σ[mask, mask]
-    for i ∈ 1:M
-        S[i] = transpose(Φ[:, i]) * B * Φ[:, i] - transpose(Φ[:, i]) * B * Φ_vw * Σ_vw * transpose(Φ_vw) * B * Φ[:, i]
-    end
+    compute_sparsity(ϕ) = compute_QS(Φ_vw, Σ_vw, B, ϕ, ϕ)
+    S = vec(mapslices(compute_sparsity, Φ, dims = 1))
     S
 end
 
 function compute_Q(Φ::Matrix{Float64}, B::Matrix{Float64}, Σ::Matrix{Float64}, t_hat::Vector{Float64}, mask::BitVector)
-    M = get_M(Φ)
-    Q = zeros(M,)
     Φ_vw = Φ[:, mask]
     Σ_vw = Σ[mask, mask]
-    for i ∈ 1:M
-        Q[i] = transpose(Φ[:, i]) * B * t_hat - transpose(Φ[:, i]) * B * Φ_vw * Σ_vw * transpose(Φ_vw) * B * t_hat
-    end
+    compute_quality(ϕ) = compute_QS(Φ_vw, Σ_vw, B, ϕ, t_hat)
+    Q = vec(mapslices(compute_quality, Φ, dims = 1))
     Q
 end
 
