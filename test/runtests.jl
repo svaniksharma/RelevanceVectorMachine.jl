@@ -5,6 +5,8 @@ using Distributions
 using RDatasets
 using Test
 
+# NOTE: see oracle_test.R for using kernlab's rvm() to test RelevanceVectorMachine.jl
+
 # Check that we get can get target and predictor variables from formula
 
 function test_formula_parsing()
@@ -59,7 +61,51 @@ function test_rvm_classification()
     @test mean(y .== predictions) == 1.0
 end
 
-test_formula_parsing()
-test_classification_output()
-test_rvm_regression()
-test_rvm_classification()
+# Check that training error decreases (regression)
+
+function test_mse_decrease()
+    X = reshape(collect(range(-1, 1, 1000)), 1000, 1)
+    w = 3
+    y = X * w
+    model_matrix_initial = hcat(X[1:500, 1], y[1:500, 1])
+    df = DataFrame(model_matrix_initial, :auto)
+    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
+    predictions = RelevanceVectorMachine.predict(rvm, X)
+    mse_initial = mean(@. (y - predictions)^2)
+    model_matrix_new = hcat(X, y)
+    df = DataFrame(model_matrix_new, :auto)
+    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
+    predictions = RelevanceVectorMachine.predict(rvm, X)
+    mse_new = mean(@. (y - predictions)^2)
+    @test mse_initial ≥ mse_new
+end
+
+# Check that accuracy improves
+
+function test_accuracy_increase()
+    X = reshape(collect(range(-1, 1, 1000)), 1000, 1)
+    w = -0.5
+    y = X * w
+    y[y .< 0] .= -1
+    y[y .> 0] .= 1
+    model_matrix_initial = hcat(X[1:500, 1], y[1:500, 1])
+    df = DataFrame(model_matrix_initial, :auto)
+    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
+    predictions = RelevanceVectorMachine.predict(rvm, X)
+    accuracy_initial = mean(y .== predictions)
+    model_matrix_new = hcat(X, y)
+    df = DataFrame(model_matrix_new, :auto)
+    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
+    predictions = RelevanceVectorMachine.predict(rvm, X)
+    accuracy_new = mean(y .== predictions)
+    @test accuracy_initial ≤ accuracy_new
+end
+
+@testset "RelevanceVectorMachine.jl" begin
+    test_formula_parsing()
+    test_classification_output()
+    test_rvm_regression()
+    test_rvm_classification()
+    test_mse_decrease()
+    test_accuracy_increase()
+end

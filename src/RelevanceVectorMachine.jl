@@ -22,20 +22,20 @@ struct RVM
 end
 
 """
-    rvm(formula::FormulaTerm, data, mode = "regression")
+    rvm(formula::FormulaTerm, data, mode = "regression", max_iters = 1000)
 
 Initialize and train a relevance vector machine, using the variables specified in
 `formula` with the data provided in `data`. `mode` can either be "regression" or 
 "classification".
 
 """
-function rvm(formula::FormulaTerm, data, mode = "regression")
+function rvm(formula::FormulaTerm, data, mode = "regression", max_iters = 100)
     Φ = get_Φ(formula, data)
     t = get_t(formula, data)
     if mode != "regression" && mode != "classification"
         error("Specify mode as regression or classification")
     end
-    sparse_seq_bayes(Φ, t, mode == "regression")
+    sparse_seq_bayes(Φ, t, mode == "regression", max_iters)
 end
 
 """
@@ -56,7 +56,7 @@ end
     posterior(rvm::RVM)
 
 Returns a normal distribution with mean μ and covariance Σ corresponding to 
-the parameters of the relevance vector machine.
+the distribution of the weight parameter (a vector) of the relevance vector machine.
 """
 posterior(rvm::RVM) = MvNormal(rvm.μ, Hermitian(rvm.Σ))
 
@@ -66,7 +66,7 @@ get_N(Φ) = size(Φ, 1)
 get_M(Φ) = size(Φ, 2)
 σ(y) = 1 / (1 + exp(-y))
 
-function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression::Bool)
+function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression::Bool, max_iters)
     N = get_N(Φ)
     B = randn(N, N)
     if is_regression
@@ -88,7 +88,8 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
     α[1] = update_α(1, q, s)
     Σ[mask, mask] = compute_Σ(Φ, B, α, mask)
     μ[mask] = compute_μ(Φ, B, Σ, t_hat, mask)
-    while !converged(α, q, s)
+    niters = 0
+    while !converged(α, q, s) && niters < max_iters
         for i ∈ 1:M
             if q[i]^2 > s[i] && α[i] < Inf
                 α[i] = update_α(i, q, s)
@@ -111,6 +112,10 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
         s = compute_s(S, α)
         Σ[mask, mask] = compute_Σ(Φ, B, α, mask)
         μ[mask] = compute_μ(Φ, B, Σ, t_hat, mask)
+        niters += 1
+    end
+    if niters ≥ max_iters
+        println("[WARNING] RVM may have not converged")
     end
     RVM(μ, Σ, α, B, is_regression)
 end

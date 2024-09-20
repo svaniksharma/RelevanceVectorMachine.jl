@@ -19,7 +19,7 @@ RVM
 ```
 
 ```@docs
-rvm(formula::FormulaTerm, data, mode = "regression")
+rvm(formula::FormulaTerm, data, mode = "regression", max_iters = 100)
 ```
 
 ```@docs
