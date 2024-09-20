@@ -77,17 +77,27 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
     α = fill(Inf, M)
     μ = zeros(M,)
     Σ = zeros(M, M)
+    S = nothing
+    Q = nothing
+    q = nothing
+    s = nothing
+    t_hat = nothing
     mask = BitArray(fill(false, M))
     mask[1] = true
-    B = compute_B(B, Φ, μ, is_regression)
-    t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
-    S = compute_S(Φ, B, Σ, mask)
-    Q = compute_Q(Φ, B, Σ, t_hat, mask)
-    q = compute_q(Q, S, α)
-    s = compute_s(S, α)
-    α[1] = update_α(1, q, s)
-    Σ[mask, mask] = compute_Σ(Φ, B, α, mask)
-    μ[mask] = compute_μ(Φ, B, Σ, t_hat, mask)
+    function compute_all_quantities(is_initial::Bool)
+        B = compute_B(B, Φ, μ, is_regression)
+        t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
+        S = compute_S(Φ, B, Σ, mask)
+        Q = compute_Q(Φ, B, Σ, t_hat, mask)
+        q = compute_q(Q, S, α)
+        s = compute_s(S, α)
+        if is_initial
+            α[1] = update_α(1, q, s)
+        end
+        Σ[mask, mask] = compute_Σ(Φ, B, α, mask)
+        μ[mask] = compute_μ(Φ, B, Σ, t_hat, mask)
+    end
+    compute_all_quantities(true)
     niters = 0
     while !converged(α, q, s) && niters < max_iters
         for i ∈ 1:M
@@ -104,14 +114,7 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
         if is_regression
             B = update_β(Φ, μ, Σ, α, t, mask)
         end
-        B = compute_B(B, Φ, μ, is_regression)
-        t_hat = compute_t_hat(B, Φ, μ, t, is_regression)
-        S = compute_S(Φ, B, Σ, mask)
-        Q = compute_Q(Φ, B, Σ, t_hat, mask)
-        q = compute_q(Q, S, α)
-        s = compute_s(S, α)
-        Σ[mask, mask] = compute_Σ(Φ, B, α, mask)
-        μ[mask] = compute_μ(Φ, B, Σ, t_hat, mask)
+        compute_all_quantities(false)
         niters += 1
     end
     if niters ≥ max_iters
