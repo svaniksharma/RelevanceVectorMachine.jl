@@ -37,3 +37,20 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+  oracle:
+    name: Kernlab R ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '4.1.2'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+    steps:
+      - name: Use kernlab as oracle to test RelevanceVectorMachine.jl
+        run: |
+         Rscript test/oracle_test.R
