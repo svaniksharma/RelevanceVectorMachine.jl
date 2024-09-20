@@ -26,8 +26,7 @@ end
 function test_classification_output()
     df = RDatasets.dataset("datasets", "women")
     rvm = RelevanceVectorMachine.rvm(@formula(Height ~ Weight), df, "classification")
-    X = Matrix(select(df, :Weight))
-    predictions = RelevanceVectorMachine.predict(rvm, X)
+    predictions = RelevanceVectorMachine.predict(rvm, df)
     @test all(0 .≤ predictions .≤ 1)
 end
 
@@ -40,7 +39,7 @@ function test_rvm_regression()
     model_matrix = hcat(X, y)
     df = DataFrame(model_matrix, :auto)
     rvm = RelevanceVectorMachine.rvm(@formula(x5 ~ x1 + x2 + x3 + x4), df)
-    predictions = RelevanceVectorMachine.predict(rvm, X)
+    predictions = RelevanceVectorMachine.predict(rvm, df)
     @test isapprox(y, predictions, rtol=1e-3)
 end
 
@@ -55,7 +54,7 @@ function test_rvm_classification()
     model_matrix = hcat(X, y)
     df = DataFrame(model_matrix, :auto)
     rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df, "classification")
-    predictions = RelevanceVectorMachine.predict(rvm, X)
+    predictions = RelevanceVectorMachine.predict(rvm, df)
     predictions[predictions .< 0.5] .= -1
     predictions[predictions .≥ 0.5] .= 1
     @test mean(y .== predictions) == 1.0
@@ -64,18 +63,18 @@ end
 # Check that training error decreases (regression)
 
 function test_mse_decrease()
-    X = reshape(collect(range(-1, 1, 1000)), 1000, 1)
+    X = collect(range(-1, 1, 1000))
     w = 3
     y = X * w
-    model_matrix_initial = hcat(X[1:500, 1], y[1:500, 1])
+    model_matrix_initial = hcat(X[1:500], y[1:500])
     df = DataFrame(model_matrix_initial, :auto)
-    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
-    predictions = RelevanceVectorMachine.predict(rvm, X)
-    mse_initial = mean(@. (y - predictions)^2)
     model_matrix_new = hcat(X, y)
-    df = DataFrame(model_matrix_new, :auto)
+    full_df = DataFrame(model_matrix_new, :auto)
     rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
-    predictions = RelevanceVectorMachine.predict(rvm, X)
+    predictions = RelevanceVectorMachine.predict(rvm, full_df)
+    mse_initial = mean(@. (y - predictions)^2)
+    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
+    predictions = RelevanceVectorMachine.predict(rvm, full_df)
     mse_new = mean(@. (y - predictions)^2)
     @test mse_initial ≥ mse_new
 end
@@ -83,20 +82,20 @@ end
 # Check that accuracy improves
 
 function test_accuracy_increase()
-    X = reshape(collect(range(-1, 1, 1000)), 1000, 1)
+    X = collect(range(-1, 1, 1000))
     w = -0.5
     y = X * w
     y[y .< 0] .= -1
     y[y .> 0] .= 1
-    model_matrix_initial = hcat(X[1:500, 1], y[1:500, 1])
+    model_matrix_initial = hcat(X[1:500], y[1:500])
     df = DataFrame(model_matrix_initial, :auto)
-    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
-    predictions = RelevanceVectorMachine.predict(rvm, X)
-    accuracy_initial = mean(y .== predictions)
     model_matrix_new = hcat(X, y)
-    df = DataFrame(model_matrix_new, :auto)
+    full_df = DataFrame(model_matrix_new, :auto)
     rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
-    predictions = RelevanceVectorMachine.predict(rvm, X)
+    predictions = RelevanceVectorMachine.predict(rvm, full_df)
+    accuracy_initial = mean(y .== predictions)
+    rvm = RelevanceVectorMachine.rvm(@formula(x2 ~ x1), df)
+    predictions = RelevanceVectorMachine.predict(rvm, full_df)
     accuracy_new = mean(y .== predictions)
     @test accuracy_initial ≤ accuracy_new
 end
