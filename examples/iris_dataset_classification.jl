@@ -63,7 +63,7 @@ md"""
 """
 
 # ╔═╡ 8807f224-5413-4850-b499-aeb56d5dfa0a
-predictions = RelevanceVectorMachine.predict(rvm, Matrix(select(iris_dataset, Not(:Species))))
+predictions = RelevanceVectorMachine.predict(rvm, iris_dataset)
 
 # ╔═╡ 374ff4bc-7c6e-4e22-b334-546543ea7776
 md"""

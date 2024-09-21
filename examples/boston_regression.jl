@@ -59,8 +59,7 @@ md"""
 
 # ╔═╡ 0a0018b3-c361-4eb0-9eb1-71a5e5078e91
 begin
-	ages = boston_data[:, :Rm][:, :] # put it into matrix form
-	preds = RelevanceVectorMachine.predict(rvm, ages)
+	preds = RelevanceVectorMachine.predict(rvm, boston_data)
 	p = plot(boston_data[:, :Rm], preds)
 	scatter!(p, boston_data[:, :Rm], boston_data[:, :MedV])
 end
@@ -77,7 +76,7 @@ post = RelevanceVectorMachine.posterior(rvm)
 μ_post = rand(post, 10000)
 
 # ╔═╡ f090679c-6f38-4f88-addf-6e42bb2e0606
-pred_samples = ages * μ_post
+pred_samples = boston_data[:, :Rm] * μ_post
 
 # ╔═╡ d13e59f2-49ce-4235-a0e6-3bed30930b21
 # This calculates the means from the samples
