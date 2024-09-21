@@ -18,6 +18,7 @@ struct RVM
     Σ::Matrix{Float64}
     α::Vector{Float64}
     B::Matrix{Float64}
+    formula::FormulaTerm
     is_regression::Bool
 end
 
@@ -35,20 +36,21 @@ function rvm(formula::FormulaTerm, data, mode = "regression", max_iters = 100)
     if mode != "regression" && mode != "classification"
         error("Specify mode as regression or classification")
     end
-    sparse_seq_bayes(Φ, t, mode == "regression", max_iters)
+    sparse_seq_bayes(Φ, t, formula, mode == "regression", max_iters)
 end
 
 """
     predict(rvm::RVM, X)
 
-Given a matrix `X` and relevance vector machine `rvm`, compute predictions for `X`.
+Given a table `X` and relevance vector machine `rvm`, compute predictions for `X`.
 
 """
 function predict(rvm::RVM, X)
+    Φ = get_Φ(rvm.formula, X)
     if rvm.is_regression
-        X * rvm.μ
+        Φ * rvm.μ
     else
-        σ.(X * rvm.μ)
+        σ.(Φ * rvm.μ)
     end
 end
 
@@ -66,7 +68,7 @@ get_N(Φ) = size(Φ, 1)
 get_M(Φ) = size(Φ, 2)
 σ(y) = 1 / (1 + exp(-y))
 
-function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression::Bool, max_iters)
+function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, formula::FormulaTerm, is_regression::Bool, max_iters)
     N = get_N(Φ)
     B = randn(N, N)
     if is_regression
@@ -120,7 +122,7 @@ function sparse_seq_bayes(Φ::Matrix{Float64}, t::Vector{Float64}, is_regression
     if niters ≥ max_iters
         println("[WARNING] RVM may have not converged")
     end
-    RVM(μ, Σ, α, B, is_regression)
+    RVM(μ, Σ, α, B, formula, is_regression)
 end
 
 function compute_B(B::Matrix{Float64}, Φ::Matrix{Float64}, μ::Vector{Float64}, is_regression::Bool)
