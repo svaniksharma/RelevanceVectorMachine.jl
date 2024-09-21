@@ -32,6 +32,11 @@ test_synthetic_func <- function(y_col, y_col_name) {
   all.equal(r_result, julia_result, tolerance = 1e-1)
 }
 
-test_synthetic_func(df$y1, "y1")
-test_synthetic_func(df$y2, "y2")
-test_synthetic_func(df$y3, "y3")
+check_fit <- function(col, colname) {
+  fit_result <- test_synthetic_func(col, colname)
+  stopifnot(fit_result)
+}
+
+check_fit(df$y1, "y1")
+check_fit(df$y2, "y2")
+check_fit(df$y3, "y3")
