@@ -25,6 +25,8 @@ rvm = RelevanceVectorMachine.rvm(@formula(MedV ~ Rm), boston_data)
 preds = RelevanceVectorMachine.predict(rvm, new_boston_data)
 ```
 
+See the [examples](https://github.com/svaniksharma/RelevanceVectorMachine.jl/tree/master/examples) folder for more.
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
