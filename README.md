@@ -1,5 +1,7 @@
 # RelevanceVectorMachine.jl
 
+![build](https://github.com/svaniksharma/RelevanceVectorMachine.jl/actions/workflows/CI.yml/badge.svg)
+
 A [relevance vector machine](http://proceedings.mlr.press/r4/tipping03a/tipping03a.pdf) implementation written in Julia.
 
 ## Installation
