@@ -1,5 +1,9 @@
 # RelevanceVectorMachine.jl
 
+![build](https://github.com/svaniksharma/RelevanceVectorMachine.jl/actions/workflows/CI.yml/badge.svg)
+![documentation](https://github.com/svaniksharma/RelevanceVectorMachine.jl/actions/workflows/Documentation.yml/badge.svg)
+![Julia](https://img.shields.io/badge/-Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white)
+
 A [relevance vector machine](http://proceedings.mlr.press/r4/tipping03a/tipping03a.pdf) implementation written in Julia.
 
 ## Installation
